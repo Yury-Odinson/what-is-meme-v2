@@ -1,0 +1,23 @@
+.header {
+	border: 1px solid red;
+}
+
+.lobby {
+	border: 1px solid blue;
+	display: grid;
+}
+
+.lobby-main {
+	border: 1px solid green;
+	display: grid;
+	grid-template-columns: 2fr 1fr;
+	gap: 16px;
+}
+
+.room-list {
+	display: flex;
+	border: 1px solid purple;
+	padding: 0;
+	margin: 0;
+}
+
