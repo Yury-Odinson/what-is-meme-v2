@@ -45,6 +45,7 @@ export type RoomState = {
   hostId: string | null;
   currentQuestionIndex: number;
   questionTotal: number;
+	questions: string[];
   currentQuestion: string | null;
   turnEndsAt: number | null;
   voteEndsAt: number | null;

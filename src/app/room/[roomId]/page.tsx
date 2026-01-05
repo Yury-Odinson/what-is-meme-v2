@@ -364,7 +364,7 @@ export default function RoomPage() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          {room?.hostId === socket.id && room.status === "waiting" ? (
+          {room?.hostId === socket.id && room?.status === "waiting" ? (
             <div
               style={{
                 border: "1px solid #e2e8f0",
@@ -430,15 +430,57 @@ export default function RoomPage() {
               borderRadius: "12px",
               background: "#fff",
               padding: "12px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
             }}
           >
-            <h3 style={{ marginTop: 0 }}>Сводка</h3>
-            <ul style={{ margin: 0, paddingLeft: "20px", lineHeight: 1.6 }}>
-              <li>Хост запускает игру, когда достаточно игроков.</li>
-              <li>На руках по 6 карт, после хода добор идёт из колоды.</li>
-              <li>Все сыграли — начинается голосование за лучший мем.</li>
-              <li>Таймеры отображаются, вопросы меняются в настройках комнаты.</li>
-            </ul>
+            <h3 style={{ marginTop: 0 }}>Чат комнаты</h3>
+            <div
+              style={{
+                maxHeight: "320px",
+                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+              }}
+            >
+              {chat.map((msg) => (
+                <div key={msg.id} style={{ background: "#f8fafc", padding: "6px 8px" }}>
+                  <strong>{msg.from}: </strong>
+                  <span>{msg.body}</span>
+                </div>
+              ))}
+              {chat.length === 0 ? <p style={{ margin: 0 }}>Сообщений нет.</p> : null}
+            </div>
+            <form
+              onSubmit={sendChat}
+              style={{ display: "flex", gap: "8px", marginTop: "4px" }}
+            >
+              <input
+                value={message}
+                onChange={(event) => setMessage(event.target.value)}
+                placeholder="Сообщение"
+                style={{
+                  flex: 1,
+                  padding: "8px",
+                  borderRadius: "6px",
+                  border: "1px solid #cbd5e1",
+                }}
+              />
+              <button
+                type="submit"
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "8px",
+                  background: "#111827",
+                  color: "white",
+                  border: "none",
+                }}
+              >
+                Отправить
+              </button>
+            </form>
           </div>
         </div>
       </section>
