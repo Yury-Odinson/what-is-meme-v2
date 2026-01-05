@@ -27,6 +27,8 @@ export default function RoomPage() {
   const [message, setMessage] = useState("");
   const [password, setPassword] = useState("");
   const passwordRef = useRef("");
+  const [questionTotal, setQuestionTotal] = useState(5);
+  const [questionList, setQuestionList] = useState("");
   const [joinError, setJoinError] = useState("");
   const [pendingJoin, setPendingJoin] = useState(false);
   const [now, setNow] = useState(Date.now());
@@ -57,6 +59,10 @@ export default function RoomPage() {
       setChat(state.chat || []);
       setJoinError("");
       setPendingJoin(false);
+      if (state.status === "waiting") {
+        setQuestionTotal(state.questionTotal || 5);
+        setQuestionList((state.questions || []).join("\n"));
+      }
     };
 
     const handleRoomChat = (payload: ChatMessage) => {
@@ -101,6 +107,13 @@ export default function RoomPage() {
     socket.emit("room:chat", { message });
     setMessage("");
   };
+  const saveSettings = (event: React.FormEvent) => {
+    event.preventDefault();
+    socket.emit("room:updateSettings", {
+      questionTotal,
+      questions: questionList,
+    });
+  };
 
   const you = room?.players.find((p) => p.id === socket.id);
   const isPlaying = room?.status === "playing";
@@ -134,16 +147,16 @@ export default function RoomPage() {
           ) : null}
           {joinError ? (
             <div style={{ color: "red", marginTop: "6px" }}>
-              {joinError}{" "}
+              {joinError}
               <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
                 <input
-                    type="password"
-                    value={password}
-                    placeholder="Пароль комнаты"
-                    onChange={(event) => {
-                      setPassword(event.target.value);
-                      passwordRef.current = event.target.value;
-                    }}
+                  type="password"
+                  value={password}
+                  placeholder="Пароль комнаты"
+                  onChange={(event) => {
+                    setPassword(event.target.value);
+                    passwordRef.current = event.target.value;
+                  }}
                   style={{
                     padding: "8px",
                     borderRadius: "6px",
@@ -218,7 +231,7 @@ export default function RoomPage() {
           <div>
             <h2 style={{ margin: "0 0 4px 0" }}>Вопрос</h2>
             <p style={{ margin: 0, fontSize: "18px" }}>
-              {room?.currentQuestion || "Ожидание начала игры"}
+              {room?.currentQuestion || "Ожидаем начала игры"}
             </p>
           </div>
 
@@ -351,61 +364,65 @@ export default function RoomPage() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          <div
-            style={{
-              border: "1px solid #e2e8f0",
-              borderRadius: "12px",
-              background: "#fff",
-              padding: "12px",
-            }}
-          >
-            <h3 style={{ marginTop: 0 }}>Чат</h3>
+          {room?.hostId === socket.id && room.status === "waiting" ? (
             <div
               style={{
-                maxHeight: "320px",
-                overflowY: "auto",
-                display: "flex",
-                flexDirection: "column",
-                gap: "8px",
+                border: "1px solid #e2e8f0",
+                borderRadius: "12px",
+                background: "#fff",
+                padding: "12px",
               }}
             >
-              {chat.map((msg) => (
-                <div key={msg.id} style={{ background: "#f8fafc", padding: "6px 8px" }}>
-                  <strong>{msg.from}: </strong>
-                  <span>{msg.body}</span>
-                </div>
-              ))}
-              {chat.length === 0 ? <p style={{ margin: 0 }}>Сообщений нет.</p> : null}
-            </div>
-            <form
-              onSubmit={sendChat}
-              style={{ display: "flex", gap: "8px", marginTop: "10px" }}
-            >
-              <input
-                value={message}
-                onChange={(event) => setMessage(event.target.value)}
-                placeholder="Сообщение"
-                style={{
-                  flex: 1,
-                  padding: "8px",
-                  borderRadius: "6px",
-                  border: "1px solid #cbd5e1",
-                }}
-              />
-              <button
-                type="submit"
-                style={{
-                  padding: "8px 12px",
-                  borderRadius: "8px",
-                  background: "#111827",
-                  color: "white",
-                  border: "none",
-                }}
+              <h3 style={{ marginTop: 0 }}>Настройки вопросов (хост)</h3>
+              <form
+                onSubmit={saveSettings}
+                style={{ display: "flex", flexDirection: "column", gap: "8px" }}
               >
-                Отправить
-              </button>
-            </form>
-          </div>
+                <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  Кол-во вопросов
+                  <input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={questionTotal}
+                    onChange={(event) => setQuestionTotal(Number(event.target.value))}
+                    style={{
+                      padding: "8px",
+                      borderRadius: "6px",
+                      border: "1px solid #cbd5e1",
+                    }}
+                  />
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  Свои вопросы (по одному в строке, пусто — дефолт)
+                  <textarea
+                    value={questionList}
+                    onChange={(event) => setQuestionList(event.target.value)}
+                    rows={6}
+                    style={{
+                      padding: "8px",
+                      borderRadius: "6px",
+                      border: "1px solid #cbd5e1",
+                      resize: "vertical",
+                    }}
+                  />
+                </label>
+                <button
+                  type="submit"
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "8px",
+                    background: "#111827",
+                    color: "white",
+                    border: "none",
+                    width: "fit-content",
+                  }}
+                >
+                  Сохранить
+                </button>
+              </form>
+            </div>
+          ) : null}
 
           <div
             style={{
@@ -420,7 +437,7 @@ export default function RoomPage() {
               <li>Хост запускает игру, когда достаточно игроков.</li>
               <li>На руках по 6 карт, после хода добор идёт из колоды.</li>
               <li>Все сыграли — начинается голосование за лучший мем.</li>
-              <li>Таймеры отображаются, можно поменять списки вопросов и мемов в коде.</li>
+              <li>Таймеры отображаются, вопросы меняются в настройках комнаты.</li>
             </ul>
           </div>
         </div>

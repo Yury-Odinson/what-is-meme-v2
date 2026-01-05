@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ensureSocketConnection, getSocket } from "@/lib/socket";
 import { loadPlayerProfile } from "@/lib/playerStorage";
@@ -13,22 +13,28 @@ export default function LobbyPage() {
   const [message, setMessage] = useState("");
   const [roomName, setRoomName] = useState("Новая комната");
   const [roomPassword, setRoomPassword] = useState("");
-  const [questionTotal, setQuestionTotal] = useState(5);
-  const [customQuestions, setCustomQuestions] = useState("");
   const [passwords, setPasswords] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
-
-  const profile = useMemo(() => loadPlayerProfile(), []);
+  const [playerName, setPlayerName] = useState("");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (!profile.name) {
+    const profile = loadPlayerProfile();
+    if (profile.name) setPlayerName(profile.name);
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    if (!playerName) {
       router.push("/");
       return;
     }
+
     const socket = ensureSocketConnection();
 
     const handleConnect = () => {
-      socket.emit("player:register", { name: profile.name });
+      socket.emit("player:register", { name: playerName });
       socket.emit("lobby:requestRooms");
     };
 
@@ -52,7 +58,7 @@ export default function LobbyPage() {
       socket.off("room:joined");
       socket.off("room:error");
     };
-  }, [profile.name, router]);
+  }, [playerName, router, mounted]);
 
   const createRoom = (event: React.FormEvent) => {
     event.preventDefault();
@@ -61,8 +67,6 @@ export default function LobbyPage() {
     socket.emit("lobby:createRoom", {
       name: roomName,
       password: roomPassword || "",
-      questionTotal: questionTotal || 5,
-      questions: customQuestions,
     });
   };
 
@@ -83,12 +87,14 @@ export default function LobbyPage() {
     setMessage("");
   };
 
+  if (!mounted) return null;
+
   return (
     <main style={{ display: "grid", gap: "18px" }}>
       <header style={{ display: "flex", justifyContent: "space-between" }}>
         <div>
           <h1 style={{ margin: 0 }}>Лобби</h1>
-          <p style={{ margin: "6px 0 0" }}>Игрок: {profile.name}</p>
+          <p style={{ margin: "6px 0 0" }}>Игрок: {playerName}</p>
         </div>
         <button
           onClick={() => router.push("/")}
@@ -233,35 +239,6 @@ export default function LobbyPage() {
                 }}
               />
             </label>
-            <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              Кол-во вопросов
-              <input
-                type="number"
-                min={1}
-                max={20}
-                value={questionTotal}
-                onChange={(event) => setQuestionTotal(Number(event.target.value))}
-                style={{
-                  padding: "8px",
-                  borderRadius: "6px",
-                  border: "1px solid #cbd5e1",
-                }}
-              />
-            </label>
-            <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              Свои вопросы (по одному в строке)
-              <textarea
-                value={customQuestions}
-                onChange={(event) => setCustomQuestions(event.target.value)}
-                rows={5}
-                style={{
-                  padding: "8px",
-                  borderRadius: "6px",
-                  border: "1px solid #cbd5e1",
-                  resize: "vertical",
-                }}
-              />
-            </label>
             {error ? <div style={{ color: "red" }}>{error}</div> : null}
             <button
               type="submit"
@@ -357,8 +334,8 @@ export default function LobbyPage() {
         >
           <h3 style={{ marginTop: 0 }}>Памятка</h3>
           <ul style={{ margin: 0, paddingLeft: "20px", lineHeight: 1.6 }}>
-            <li>Создайте комнату и задайте вопросы (или оставьте дефолт).</li>
-            <li>Можно поставить пароль и лимит вопросов.</li>
+            <li>Создайте комнату и зайдите внутрь, чтобы настроить вопросы.</li>
+            <li>Можно поставить пароль на комнату.</li>
             <li>Игру может стартовать только хост комнаты.</li>
             <li>Карточки мемов замените своими в серверном списке.</li>
           </ul>
