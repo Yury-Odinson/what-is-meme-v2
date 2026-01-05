@@ -2,6 +2,14 @@ const { createServer } = require("http");
 const crypto = require("crypto");
 const next = require("next");
 const { Server } = require("socket.io");
+const memeData = require("./data/memes.json");
+const questionData = require("./data/questions.json");
+const sampleCards = memeData.map((item) => ({
+  id: item.id,
+  label: item.name,
+  imageUrl: item.path,
+}));
+const sampleQuestions = questionData.map((item) => item.name);
 
 const dev = process.env.NODE_ENV !== "production";
 const port = process.env.PORT || 3000;
@@ -11,42 +19,6 @@ const handle = app.getRequestHandler();
 const HAND_SIZE = 6;
 const TURN_TIME_MS = 45_000;
 const VOTE_TIME_MS = 30_000;
-
-const sampleQuestions = [
-  "Какой мем лучше всего описывает понедельник?",
-  "Карточка, которая идеально передает удалёнку.",
-  "Выберите мем для настроения «ничего не понял, но очень интересно».",
-  "Лучший мем, чтобы ответить начальнику в 2 ночи.",
-  "Мем для ситуации «я это починю… когда‑нибудь».",
-];
-
-const sampleCards = [
-  {
-    id: "card-template-1",
-    label: "Distracted Boyfriend",
-    imageUrl: "https://picsum.photos/seed/meme1/480/320",
-  },
-  {
-    id: "card-template-2",
-    label: "Drake Hotline Bling",
-    imageUrl: "https://picsum.photos/seed/meme2/480/320",
-  },
-  {
-    id: "card-template-3",
-    label: "Woman Yelling at Cat",
-    imageUrl: "https://picsum.photos/seed/meme3/480/320",
-  },
-  {
-    id: "card-template-4",
-    label: "Success Kid",
-    imageUrl: "https://picsum.photos/seed/meme4/480/320",
-  },
-  {
-    id: "card-template-5",
-    label: "UNO Draw 25",
-    imageUrl: "https://picsum.photos/seed/meme5/480/320",
-  },
-];
 
 const rooms = new Map();
 
