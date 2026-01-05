@@ -32,6 +32,7 @@ export default function RoomPage() {
   const [joinError, setJoinError] = useState("");
   const [pendingJoin, setPendingJoin] = useState(false);
   const [now, setNow] = useState(Date.now());
+  const chatRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -92,6 +93,12 @@ export default function RoomPage() {
       socket.off("room:joined", handleJoined);
     };
   }, [profile.name, roomId, router, socket]);
+
+  useEffect(() => {
+    const el = chatRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [chat]);
 
   const startGame = () => socket.emit("room:start");
   const leaveRoom = () => {
@@ -233,38 +240,6 @@ export default function RoomPage() {
             <p style={{ margin: 0, fontSize: "18px" }}>
               {room?.currentQuestion || "Ожидаем начала игры"}
             </p>
-          </div>
-
-          <div style={{ display: "grid", gap: "10px" }}>
-            <h3 style={{ margin: 0 }}>Игроки</h3>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                gap: "10px",
-              }}
-            >
-              {room?.players.map((player) => (
-                <div
-                  key={player.id}
-                  style={{
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "8px",
-                    padding: "8px",
-                    background: "#f8fafc",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <strong>{player.name}</strong>
-                    <span>{player.score} очк.</span>
-                  </div>
-                  <small>
-                    {player.isHost ? "Хост · " : ""}
-                    {player.hasPlayed ? "Карту положил" : "Выбирает карту"}
-                  </small>
-                </div>
-              ))}
-            </div>
           </div>
 
           <div>
@@ -438,12 +413,13 @@ export default function RoomPage() {
             <h3 style={{ marginTop: 0 }}>Чат комнаты</h3>
             <div
               style={{
-                maxHeight: "320px",
+                height: "320px",
                 overflowY: "auto",
                 display: "flex",
                 flexDirection: "column",
                 gap: "8px",
               }}
+              ref={chatRef}
             >
               {chat.map((msg) => (
                 <div key={msg.id} style={{ background: "#f8fafc", padding: "6px 8px" }}>
@@ -481,6 +457,48 @@ export default function RoomPage() {
                 Отправить
               </button>
             </form>
+          </div>
+
+          <div
+            style={{
+              border: "1px solid #e2e8f0",
+              borderRadius: "12px",
+              background: "#fff",
+              padding: "12px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+            }}
+          >
+            <h3 style={{ margin: 0 }}>Игроки</h3>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: "10px",
+              }}
+            >
+              {room?.players.map((player) => (
+                <div
+                  key={player.id}
+                  style={{
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "8px",
+                    padding: "8px",
+                    background: "#f8fafc",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <strong>{player.name}</strong>
+                    <span>{player.score} очк.</span>
+                  </div>
+                  <small>
+                    {player.isHost ? "Хост · " : ""}
+                    {player.hasPlayed ? "Карту положил" : "Выбирает карту"}
+                  </small>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>

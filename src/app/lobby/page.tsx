@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ensureSocketConnection, getSocket } from "@/lib/socket";
 import { loadPlayerProfile } from "@/lib/playerStorage";
@@ -17,6 +17,7 @@ export default function LobbyPage() {
   const [error, setError] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [mounted, setMounted] = useState(false);
+  const chatRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const profile = loadPlayerProfile();
@@ -59,6 +60,12 @@ export default function LobbyPage() {
       socket.off("room:error");
     };
   }, [playerName, router, mounted]);
+
+  useEffect(() => {
+    const el = chatRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [chat]);
 
   const createRoom = (event: React.FormEvent) => {
     event.preventDefault();
@@ -274,12 +281,13 @@ export default function LobbyPage() {
           <h3 style={{ marginTop: 0 }}>Чат лобби</h3>
           <div
             style={{
-              maxHeight: "240px",
+              height: "300px",
               overflowY: "auto",
               display: "flex",
               flexDirection: "column",
               gap: "8px",
             }}
+            ref={chatRef}
           >
             {chat.map((msg) => (
               <div key={msg.id} style={{ padding: "6px 8px", background: "#f8fafc" }}>

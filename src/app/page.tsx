@@ -35,17 +35,13 @@ export default function Home() {
         }}
       >
         <h1 style={{ margin: 0 }}>What is Meme</h1>
-        <p style={{ margin: 0, lineHeight: 1.6 }}>
-          Введите имя, чтобы попасть в лобби. Имя хранится в куках, регистрация
-          не нужна.
-        </p>
 
         <form
           onSubmit={handleSubmit}
           style={{ display: "flex", flexDirection: "column", gap: "8px" }}
         >
           <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <span>Ваше имя</span>
+            <span> Введите имя, чтобы попасть в лобби:</span>
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
