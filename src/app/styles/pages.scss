@@ -196,7 +196,13 @@
 
 .question-text {
   margin: 0;
-  font-size: 18px;
+	padding: 24px;
+  font-size: 28px;
+	font-weight: 800;
+	border-radius: 8px;
+	background: #f1f5f9;
+	border: 1px solid #e2e8f0;
+	text-align: center;
 }
 
 .cards-grid {

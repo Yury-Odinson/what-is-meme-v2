@@ -220,7 +220,6 @@ export default function RoomPage() {
           ) : (
             <>
               <div>
-                <h2 className="question-box">Вопрос</h2>
                 <p className="question-text">
                   {room?.currentQuestion || "Ожидаем начала игры"}
                 </p>
