@@ -250,10 +250,7 @@ export default function RoomPage() {
                         <span>{submission.votes} голосов</span>
                       </div>
                       {room?.status === "voting" && submission.playerId !== socket.id ? (
-                        <button
-                          className="btn"
-                          onClick={() => voteFor(submission.playerId)}
-                        >
+                        <button className="btn" onClick={() => voteFor(submission.playerId)}>
                           Голосовать
                         </button>
                       ) : null}
@@ -304,7 +301,10 @@ export default function RoomPage() {
             <h3 className="section-title">Чат комнаты</h3>
             <div className="chat chat-tall" ref={chatRef}>
               {chat.map((msg) => (
-                <div key={msg.id} className="chat-message">
+                <div
+                  key={msg.id}
+                  className={`chat-message${msg.from === profile.name ? " chat-message--own" : ""}`}
+                >
                   <strong>{msg.from}: </strong>
                   <span>{msg.body}</span>
                 </div>

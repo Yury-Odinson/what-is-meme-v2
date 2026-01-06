@@ -184,7 +184,10 @@ export default function LobbyPage() {
           <h3 className="section-title">Чат лобби</h3>
           <div className="chat chat--short" ref={chatRef}>
             {chat.map((msg) => (
-              <div key={msg.id} className="chat-message">
+              <div
+                key={msg.id}
+                className={`chat-message${msg.from === playerName ? " chat-message--own" : ""}`}
+              >
                 <strong>{msg.from}: </strong>
                 <span>{msg.body}</span>
               </div>
