@@ -17,8 +17,8 @@ const app = next({ dev });
 const handle = app.getRequestHandler();
 
 const HAND_SIZE = 6;
-const TURN_TIME_MS = 45_000;
-const VOTE_TIME_MS = 30_000;
+const TURN_TIME_MS = 5_000;
+const VOTE_TIME_MS = 5_000;
 
 const rooms = new Map();
 
@@ -215,12 +215,27 @@ function finishVoting(room) {
   startNextQuestion(room);
 }
 
-function createRoom({ name, password, questionTotal, questions, hostSocket }) {
+function checkRoomTimers(io) {
+  const now = Date.now();
+  rooms.forEach((room) => {
+    if (room.status === "playing" && room.turnEndsAt && now >= room.turnEndsAt) {
+      room.status = "voting";
+      room.turnEndsAt = null;
+      room.voteEndsAt = now + VOTE_TIME_MS;
+      emitRoomState(room, io);
+    } else if (room.status === "voting" && room.voteEndsAt && now >= room.voteEndsAt) {
+      finishVoting(room);
+      emitRoomState(room, io);
+      emitLobbyState(io);
+    }
+  });
+}
+
+function createRoom({ name, password, questions, hostSocket }) {
   const roomId = randomId("room");
-  const trimmedQuestions =
-    questions && questions.length > 0
-      ? questions.slice(0, questionTotal)
-      : sampleQuestions.slice(0, questionTotal);
+  const questionPool =
+    questions && questions.length > 0 ? shuffle(questions) : shuffle(sampleQuestions);
+  const trimmedQuestions = questionPool;
 
   const room = {
     id: roomId,
@@ -276,12 +291,11 @@ app
 
       socket.on(
         "lobby:createRoom",
-        ({ name, password, questionTotal = 2, questions }) => {
+        ({ name, password, questions }) => {
           if (!socket.data.name) return;
           const room = createRoom({
             name,
             password,
-            questionTotal: Number(questionTotal) || 2,
             questions: normalizeQuestions(questions),
             hostSocket: socket,
           });
@@ -373,6 +387,20 @@ app
         io.to(room.id).emit("room:chat", payload);
       });
 
+      socket.on("room:updateSettings", ({ questions }) => {
+        const roomId = socket.data.roomId;
+        const room = rooms.get(roomId);
+        if (!room || room.hostId !== socket.id) return;
+        if (room.status !== "waiting") return;
+        const normalizedList = normalizeQuestions(questions);
+        const sourceQuestions = normalizedList.length > 0 ? normalizedList : sampleQuestions;
+        room.questions = shuffle(sourceQuestions);
+        room.questionTotal = room.questions.length;
+        room.currentQuestionIndex = -1;
+        emitRoomState(room, io);
+        emitLobbyState(io);
+      });
+
       socket.on("room:start", () => {
         const roomId = socket.data.roomId;
         const room = rooms.get(roomId);
@@ -448,6 +476,8 @@ app
         emitLobbyState(io);
       });
     });
+
+    setInterval(() => checkRoomTimers(io), 1_000);
 
     server.listen(port, (err) => {
       if (err) throw err;
