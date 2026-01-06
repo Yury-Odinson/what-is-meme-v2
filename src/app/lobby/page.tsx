@@ -97,251 +97,117 @@ export default function LobbyPage() {
   if (!mounted) return null;
 
   return (
-    <main style={{ display: "grid", gap: "18px" }}>
-      <header style={{ display: "flex", justifyContent: "space-between" }}>
+    <main className="page">
+      <header className="header">
         <div>
-          <h1 style={{ margin: 0 }}>Лобби</h1>
-          <p style={{ margin: "6px 0 0" }}>Игрок: {playerName}</p>
+          <h1 className="header-title">Лобби</h1>
+          <p className="header-sub">Игрок: {playerName}</p>
         </div>
-        <button
-          onClick={() => router.push("/")}
-          style={{
-            padding: "8px 12px",
-            borderRadius: "8px",
-            border: "1px solid #cbd5e1",
-          }}
-        >
+        <button className="btn" onClick={() => router.push("/")}>
           Сменить имя
         </button>
       </header>
 
-      <section
-        style={{
-          display: "grid",
-          gridTemplateColumns: "2fr 1fr",
-          gap: "16px",
-          alignItems: "start",
-        }}
-      >
-        <div
-          style={{
-            padding: "12px",
-            border: "1px solid #e2e8f0",
-            borderRadius: "12px",
-            background: "#fff",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "12px",
-            }}
-          >
-            <h2 style={{ margin: 0 }}>Комнаты</h2>
-            <small>Всего: {rooms.length}</small>
+      <section className="grid-two">
+        <div className="section">
+          <div className="section-header">
+            <h2 className="section-title">Комнаты</h2>
+            <small className="section-meta">Всего: {rooms.length}</small>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div className="rooms-list">
             {rooms.map((room) => (
-              <div
-                key={room.id}
-                style={{
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "8px",
-                  padding: "10px",
-                  background: "#f8fafc",
-                }}
-              >
-                <div
-                  style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}
-                >
-                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <strong>{room.name}</strong>
-                    <small>
-                      Игроков: {room.playerCount} · Вопросов: {room.questionTotal} · Статус:{" "}
-                      {room.status}
-                    </small>
-                    {room.requiresPassword ? (
-                      <input
-                        type="password"
-                        placeholder="Пароль"
-                        value={passwords[room.id] || ""}
-                        onChange={(event) =>
-                          setPasswords((prev) => ({
-                            ...prev,
-                            [room.id]: event.target.value,
-                          }))
-                        }
-                        style={{
-                          padding: "8px",
-                          borderRadius: "6px",
-                          border: "1px solid #cbd5e1",
-                        }}
-                      />
-                    ) : null}
-                  </div>
-                  <button
-                    onClick={() => joinRoom(room)}
-                    style={{
-                      padding: "8px 10px",
-                      borderRadius: "8px",
-                      background: "#111827",
-                      color: "white",
-                      border: "none",
-                      height: "fit-content",
-                    }}
-                  >
-                    Присоединиться
-                  </button>
+              <div key={room.id} className="room-card">
+                <div className="room-card__meta">
+                  <strong>{room.name}</strong>
+                  <small>
+                    Игроков: {room.playerCount} · Вопросов: {room.questionTotal} · Статус:{" "}
+                    {room.status}
+                  </small>
+                  {room.requiresPassword ? (
+                    <input
+                      type="password"
+                      className="input"
+                      placeholder="Пароль"
+                      value={passwords[room.id] || ""}
+                      onChange={(event) =>
+                        setPasswords((prev) => ({
+                          ...prev,
+                          [room.id]: event.target.value,
+                        }))
+                      }
+                    />
+                  ) : null}
                 </div>
+                <button className="btn btn-primary" onClick={() => joinRoom(room)}>
+                  Присоединиться
+                </button>
               </div>
             ))}
             {rooms.length === 0 ? (
-              <p style={{ margin: 0 }}>Комнат пока нет — создайте первую.</p>
+              <p className="room-list-note">Комнат пока нет — создайте первую.</p>
             ) : null}
           </div>
         </div>
 
-        <div
-          style={{
-            padding: "12px",
-            border: "1px solid #e2e8f0",
-            borderRadius: "12px",
-            background: "#fff",
-            display: "flex",
-            flexDirection: "column",
-            gap: "12px",
-          }}
-        >
-          <h2 style={{ margin: 0 }}>Создать комнату</h2>
-          <form
-            onSubmit={createRoom}
-            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
-          >
-            <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+        <div className="section stack">
+          <h2 className="section-title">Создать комнату</h2>
+          <form className="form" onSubmit={createRoom}>
+            <label className="field">
               Название
               <input
+                className="input"
                 value={roomName}
                 onChange={(event) => setRoomName(event.target.value)}
                 required
                 maxLength={48}
-                style={{
-                  padding: "8px",
-                  borderRadius: "6px",
-                  border: "1px solid #cbd5e1",
-                }}
               />
             </label>
-            <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <label className="field">
               Пароль (опционально)
               <input
+                className="input"
                 value={roomPassword}
                 onChange={(event) => setRoomPassword(event.target.value)}
                 maxLength={64}
-                style={{
-                  padding: "8px",
-                  borderRadius: "6px",
-                  border: "1px solid #cbd5e1",
-                }}
               />
             </label>
-            {error ? <div style={{ color: "red" }}>{error}</div> : null}
-            <button
-              type="submit"
-              style={{
-                padding: "10px 12px",
-                borderRadius: "8px",
-                background: "#16a34a",
-                color: "white",
-                border: "none",
-              }}
-            >
+            {error ? <div className="error-box">{error}</div> : null}
+            <button className="btn btn-success" type="submit">
               Создать
             </button>
           </form>
         </div>
       </section>
 
-      <section
-        style={{
-          display: "grid",
-          gridTemplateColumns: "2fr 1fr",
-          gap: "16px",
-        }}
-      >
-        <div
-          style={{
-            border: "1px solid #e2e8f0",
-            borderRadius: "12px",
-            background: "#fff",
-            padding: "12px",
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>Чат лобби</h3>
-          <div
-            style={{
-              height: "300px",
-              overflowY: "auto",
-              display: "flex",
-              flexDirection: "column",
-              gap: "8px",
-            }}
-            ref={chatRef}
-          >
+      <section className="grid-two">
+        <div className="section">
+          <h3 className="section-title">Чат лобби</h3>
+          <div className="chat chat--short" ref={chatRef}>
             {chat.map((msg) => (
-              <div key={msg.id} style={{ padding: "6px 8px", background: "#f8fafc" }}>
+              <div key={msg.id} className="chat-message">
                 <strong>{msg.from}: </strong>
                 <span>{msg.body}</span>
               </div>
             ))}
-            {chat.length === 0 ? <p style={{ margin: 0 }}>Сообщений нет.</p> : null}
+            {chat.length === 0 ? <p className="room-list-note">Сообщений нет.</p> : null}
           </div>
-          <form
-            onSubmit={sendMessage}
-            style={{
-              display: "flex",
-              gap: "8px",
-              marginTop: "10px",
-            }}
-          >
+          <form className="chat-form" onSubmit={sendMessage}>
             <input
+              className="input flex-1"
               value={message}
               onChange={(event) => setMessage(event.target.value)}
               placeholder="Сообщение"
               maxLength={200}
-              style={{
-                flex: 1,
-                padding: "8px",
-                borderRadius: "6px",
-                border: "1px solid #cbd5e1",
-              }}
             />
-            <button
-              type="submit"
-              style={{
-                padding: "8px 12px",
-                borderRadius: "8px",
-                background: "#111827",
-                color: "white",
-                border: "none",
-              }}
-            >
+            <button className="btn btn-primary" type="submit">
               Отправить
             </button>
           </form>
         </div>
 
-        <div
-          style={{
-            border: "1px solid #e2e8f0",
-            borderRadius: "12px",
-            background: "#fff",
-            padding: "12px",
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>Памятка</h3>
-          <ul style={{ margin: 0, paddingLeft: "20px", lineHeight: 1.6 }}>
+        <div className="section">
+          <h3 className="section-title">Памятка</h3>
+          <ul className="list-plain">
             <li>Создайте комнату и зайдите внутрь, чтобы настроить вопросы.</li>
             <li>Можно поставить пароль на комнату.</li>
             <li>Игру может стартовать только хост комнаты.</li>

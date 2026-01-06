@@ -135,50 +135,42 @@ export default function RoomPage() {
           : "Игра завершена";
 
   return (
-    <main style={{ display: "grid", gap: "16px" }}>
-      <header style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
-        <div>
-          <h1 style={{ margin: 0 }}>{room?.name || "Комната"}</h1>
-          <p style={{ margin: "4px 0 0" }}>Игрок: {profile.name}</p>
-          <p style={{ margin: "4px 0 0" }}>
+    <main className="page">
+      <header className="header">
+        <div className="stack-tight">
+          <h1 className="header-title">{room?.name || "Комната"}</h1>
+          <p className="header-sub">Игрок: {profile.name}</p>
+          <p className="header-sub">
             Статус: {statusText} · Вопрос {room ? room.currentQuestionIndex + 1 : 0} из{" "}
             {room?.questionTotal ?? "—"}
           </p>
           {isPlaying ? (
-            <p style={{ margin: 0 }}>До конца хода: {formatCountdown(room.turnEndsAt, now)}</p>
+            <p className="status-text">До конца хода: {formatCountdown(room.turnEndsAt, now)}</p>
           ) : null}
           {isVoting ? (
-            <p style={{ margin: 0 }}>
+            <p className="status-text">
               До конца голосования: {formatCountdown(room.voteEndsAt, now)}
             </p>
           ) : null}
           {joinError ? (
-            <div style={{ color: "red", marginTop: "6px" }}>
+            <div className="error-box">
               {joinError}
-              <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
+              <div className="inline-group mt-6">
                 <input
                   type="password"
+                  className="input"
                   value={password}
                   placeholder="Пароль комнаты"
                   onChange={(event) => {
                     setPassword(event.target.value);
                     passwordRef.current = event.target.value;
                   }}
-                  style={{
-                    padding: "8px",
-                    borderRadius: "6px",
-                    border: "1px solid #cbd5e1",
-                  }}
                 />
                 <button
+                  className="btn"
                   onClick={() => {
                     setJoinError("");
                     socket.emit("room:join", { roomId, password });
-                  }}
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: "8px",
-                    border: "1px solid #cbd5e1",
                   }}
                   disabled={pendingJoin}
                 >
@@ -188,83 +180,37 @@ export default function RoomPage() {
             </div>
           ) : null}
         </div>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <button
-            onClick={leaveRoom}
-            style={{
-              padding: "8px 12px",
-              borderRadius: "8px",
-              border: "1px solid #cbd5e1",
-            }}
-          >
+        <div className="inline-group">
+          <button className="btn" onClick={leaveRoom}>
             Выйти
           </button>
           {room?.hostId === socket.id && room?.status === "waiting" ? (
-            <button
-              onClick={startGame}
-              style={{
-                padding: "8px 12px",
-                borderRadius: "8px",
-                background: "#16a34a",
-                color: "white",
-                border: "none",
-              }}
-            >
+            <button className="btn btn-success" onClick={startGame}>
               Старт
             </button>
           ) : null}
         </div>
       </header>
 
-      <section
-        style={{
-          display: "grid",
-          gridTemplateColumns: "2fr 1fr",
-          gap: "16px",
-          alignItems: "start",
-        }}
-      >
-        <div
-          style={{
-            border: "1px solid #e2e8f0",
-            borderRadius: "12px",
-            background: "#fff",
-            padding: "12px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "12px",
-          }}
-        >
+      <section className="grid-two">
+        <div className="section stack">
           <div>
-            <h2 style={{ margin: "0 0 4px 0" }}>Вопрос</h2>
-            <p style={{ margin: 0, fontSize: "18px" }}>
+            <h2 className="question-box">Вопрос</h2>
+            <p className="question-text">
               {room?.currentQuestion || "Ожидаем начала игры"}
             </p>
           </div>
 
           <div>
-            <h3 style={{ margin: "0 0 8px 0" }}>{isPlaying ? "Ваши карты" : "Карты раунда"}</h3>
+            <h3 className="section-title">{isPlaying ? "Ваши карты" : "Карты раунда"}</h3>
             {isPlaying && room ? (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                  gap: "12px",
-                }}
-              >
+              <div className="cards-grid">
                 {room.hand.map((card) => (
                   <button
                     key={card.id}
                     onClick={() => playCard(card)}
                     disabled={Boolean(you?.hasPlayed)}
-                    style={{
-                      textAlign: "left",
-                      border: "1px solid #e2e8f0",
-                      borderRadius: "8px",
-                      padding: 0,
-                      overflow: "hidden",
-                      background: "#fff",
-                    }}
+                    className="card-button"
                   >
                     {card.imageUrl ? (
                       <Image
@@ -272,10 +218,10 @@ export default function RoomPage() {
                         alt={card.label}
                         width={320}
                         height={200}
-                        style={{ width: "100%", height: "auto", display: "block" }}
+                        className="img-fluid"
                       />
                     ) : null}
-                    <div style={{ padding: "8px" }}>
+                    <div className="card-content">
                       <strong>{card.label}</strong>
                     </div>
                   </button>
@@ -283,22 +229,11 @@ export default function RoomPage() {
                 {room.hand.length === 0 ? <p>Карты придут при старте.</p> : null}
               </div>
             ) : (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                  gap: "12px",
-                }}
-              >
+              <div className="submissions-grid">
                 {room?.submissions.map((submission) => (
                   <div
                     key={submission.playerId}
-                    style={{
-                      border: "1px solid #e2e8f0",
-                      borderRadius: "8px",
-                      overflow: "hidden",
-                      background: submission.isYours ? "#eef2ff" : "#fff",
-                    }}
+                    className={`submission-card${submission.isYours ? " submission-card--mine" : ""}`}
                   >
                     {submission.card.imageUrl ? (
                       <Image
@@ -306,23 +241,18 @@ export default function RoomPage() {
                         alt={submission.card.label}
                         width={320}
                         height={200}
-                        style={{ width: "100%", height: "auto", display: "block" }}
+                        className="img-fluid"
                       />
                     ) : null}
-                    <div style={{ padding: "8px", display: "grid", gap: "4px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <div className="submission-body">
+                      <div className="row">
                         <strong>{submission.playerName}</strong>
                         <span>{submission.votes} голосов</span>
                       </div>
                       {room?.status === "voting" && submission.playerId !== socket.id ? (
                         <button
+                          className="btn"
                           onClick={() => voteFor(submission.playerId)}
-                          style={{
-                            padding: "8px",
-                            borderRadius: "6px",
-                            border: "1px solid #cbd5e1",
-                            background: "#f8fafc",
-                          }}
                         >
                           Голосовать
                         </button>
@@ -331,29 +261,19 @@ export default function RoomPage() {
                   </div>
                 ))}
                 {room?.submissions.length === 0 ? (
-                  <p style={{ margin: 0 }}>Карт пока нет — ждём игроков.</p>
+                  <p>Карт пока нет — ждём игроков.</p>
                 ) : null}
               </div>
             )}
           </div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div className="stack">
           {room?.hostId === socket.id && room?.status === "waiting" ? (
-            <div
-              style={{
-                border: "1px solid #e2e8f0",
-                borderRadius: "12px",
-                background: "#fff",
-                padding: "12px",
-              }}
-            >
-              <h3 style={{ marginTop: 0 }}>Настройки вопросов (хост)</h3>
-              <form
-                onSubmit={saveSettings}
-                style={{ display: "flex", flexDirection: "column", gap: "8px" }}
-              >
-                <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <div className="section stack">
+              <h3 className="section-title">Настройки вопросов (хост)</h3>
+              <form className="form" onSubmit={saveSettings}>
+                <label className="field">
                   Кол-во вопросов
                   <input
                     type="number"
@@ -361,134 +281,55 @@ export default function RoomPage() {
                     max={20}
                     value={questionTotal}
                     onChange={(event) => setQuestionTotal(Number(event.target.value))}
-                    style={{
-                      padding: "8px",
-                      borderRadius: "6px",
-                      border: "1px solid #cbd5e1",
-                    }}
+                    className="input"
                   />
                 </label>
-                <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <label className="field">
                   Свои вопросы (по одному в строке, пусто — дефолт)
                   <textarea
                     value={questionList}
                     onChange={(event) => setQuestionList(event.target.value)}
                     rows={6}
-                    style={{
-                      padding: "8px",
-                      borderRadius: "6px",
-                      border: "1px solid #cbd5e1",
-                      resize: "vertical",
-                    }}
+                    className="textarea"
                   />
                 </label>
-                <button
-                  type="submit"
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: "8px",
-                    background: "#111827",
-                    color: "white",
-                    border: "none",
-                    width: "fit-content",
-                  }}
-                >
+                <button className="btn btn-primary" type="submit">
                   Сохранить
                 </button>
               </form>
             </div>
           ) : null}
 
-          <div
-            style={{
-              border: "1px solid #e2e8f0",
-              borderRadius: "12px",
-              background: "#fff",
-              padding: "12px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "10px",
-            }}
-          >
-            <h3 style={{ marginTop: 0 }}>Чат комнаты</h3>
-            <div
-              style={{
-                height: "320px",
-                overflowY: "auto",
-                display: "flex",
-                flexDirection: "column",
-                gap: "8px",
-              }}
-              ref={chatRef}
-            >
+          <div className="section stack">
+            <h3 className="section-title">Чат комнаты</h3>
+            <div className="chat chat-tall" ref={chatRef}>
               {chat.map((msg) => (
-                <div key={msg.id} style={{ background: "#f8fafc", padding: "6px 8px" }}>
+                <div key={msg.id} className="chat-message">
                   <strong>{msg.from}: </strong>
                   <span>{msg.body}</span>
                 </div>
               ))}
-              {chat.length === 0 ? <p style={{ margin: 0 }}>Сообщений нет.</p> : null}
+              {chat.length === 0 ? <p className="room-list-note">Сообщений нет.</p> : null}
             </div>
-            <form
-              onSubmit={sendChat}
-              style={{ display: "flex", gap: "8px", marginTop: "4px" }}
-            >
+            <form className="chat-form" onSubmit={sendChat}>
               <input
+                className="input flex-1"
                 value={message}
                 onChange={(event) => setMessage(event.target.value)}
                 placeholder="Сообщение"
-                style={{
-                  flex: 1,
-                  padding: "8px",
-                  borderRadius: "6px",
-                  border: "1px solid #cbd5e1",
-                }}
               />
-              <button
-                type="submit"
-                style={{
-                  padding: "8px 12px",
-                  borderRadius: "8px",
-                  background: "#111827",
-                  color: "white",
-                  border: "none",
-                }}
-              >
+              <button className="btn btn-primary" type="submit">
                 Отправить
               </button>
             </form>
           </div>
 
-          <div
-            style={{
-              border: "1px solid #e2e8f0",
-              borderRadius: "12px",
-              background: "#fff",
-              padding: "12px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "10px",
-            }}
-          >
-            <h3 style={{ margin: 0 }}>Игроки</h3>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                gap: "10px",
-              }}
-            >
+          <div className="section stack">
+            <h3 className="section-title">Игроки</h3>
+            <div className="players-grid">
               {room?.players.map((player) => (
-                <div
-                  key={player.id}
-                  style={{
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "8px",
-                    padding: "8px",
-                    background: "#f8fafc",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div key={player.id} className="player-card">
+                  <div className="row">
                     <strong>{player.name}</strong>
                     <span>{player.score} очк.</span>
                   </div>
