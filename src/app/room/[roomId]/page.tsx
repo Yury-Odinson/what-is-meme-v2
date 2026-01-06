@@ -27,8 +27,7 @@ export default function RoomPage() {
   const [message, setMessage] = useState("");
   const [password, setPassword] = useState("");
   const passwordRef = useRef("");
-  const [questionTotal, setQuestionTotal] = useState(5);
-  const [questionList, setQuestionList] = useState("");
+  const [questionTotal, setQuestionTotal] = useState(50);
   const [joinError, setJoinError] = useState("");
   const [pendingJoin, setPendingJoin] = useState(false);
   const [now, setNow] = useState(Date.now());
@@ -61,8 +60,7 @@ export default function RoomPage() {
       setJoinError("");
       setPendingJoin(false);
       if (state.status === "waiting") {
-        setQuestionTotal(state.questionTotal || 5);
-        setQuestionList((state.questions || []).join("\n"));
+        setQuestionTotal(state.questionTotal || 50);
       }
     };
 
@@ -117,14 +115,14 @@ export default function RoomPage() {
   const saveSettings = (event: React.FormEvent) => {
     event.preventDefault();
     socket.emit("room:updateSettings", {
-      questionTotal,
-      questions: questionList,
+      questionTotal
     });
   };
 
   const you = room?.players.find((p) => p.id === socket.id);
   const isPlaying = room?.status === "playing";
   const isVoting = room?.status === "voting";
+  const isFinished = room?.status === "finished";
   const statusText =
     room?.status === "waiting"
       ? "Ожидание старта"
@@ -134,6 +132,14 @@ export default function RoomPage() {
           ? "Голосование"
           : "Игра завершена";
 
+  const questionNumber =
+    room && room.currentQuestionIndex >= 0
+      ? Math.min(room.currentQuestionIndex + 1, room.questionTotal || 0)
+      : 0;
+  const sortedPlayers = room
+    ? [...room.players].sort((a, b) => b.score - a.score)
+    : [];
+
   return (
     <main className="page">
       <header className="header">
@@ -141,8 +147,7 @@ export default function RoomPage() {
           <h1 className="header-title">{room?.name || "Комната"}</h1>
           <p className="header-sub">Игрок: {profile.name}</p>
           <p className="header-sub">
-            Статус: {statusText} · Вопрос {room ? room.currentQuestionIndex + 1 : 0} из{" "}
-            {room?.questionTotal ?? "—"}
+            Статус: {statusText} · Вопрос {questionNumber} из {room?.questionTotal ?? "—"}
           </p>
           {isPlaying ? (
             <p className="status-text">До конца хода: {formatCountdown(room.turnEndsAt, now)}</p>
@@ -184,9 +189,9 @@ export default function RoomPage() {
           <button className="btn" onClick={leaveRoom}>
             Выйти
           </button>
-          {room?.hostId === socket.id && room?.status === "waiting" ? (
+          {room?.hostId === socket.id && (room?.status === "waiting" || isFinished) ? (
             <button className="btn btn-success" onClick={startGame}>
-              Старт
+              {isFinished ? "Играть снова" : "Старт"}
             </button>
           ) : null}
         </div>
@@ -194,75 +199,97 @@ export default function RoomPage() {
 
       <section className="grid-two">
         <div className="section stack">
-          <div>
-            <h2 className="question-box">Вопрос</h2>
-            <p className="question-text">
-              {room?.currentQuestion || "Ожидаем начала игры"}
-            </p>
-          </div>
-
-          <div>
-            <h3 className="section-title">{isPlaying ? "Ваши карты" : "Карты раунда"}</h3>
-            {isPlaying && room ? (
-              <div className="cards-grid">
-                {room.hand.map((card) => (
-                  <button
-                    key={card.id}
-                    onClick={() => playCard(card)}
-                    disabled={Boolean(you?.hasPlayed)}
-                    className="card-button"
-                  >
-                    {card.imageUrl ? (
-                      <Image
-                        src={card.imageUrl}
-                        alt={card.label}
-                        width={320}
-                        height={200}
-                        className="img-fluid"
-                      />
-                    ) : null}
-                    <div className="card-content">
-                      <strong>{card.label}</strong>
+          {isFinished ? (
+            <div className="stack">
+              <h2 className="section-title">Игра завершена</h2>
+              <div className="players-grid">
+                {sortedPlayers.map((player) => (
+                  <div key={player.id} className="player-card">
+                    <div className="row">
+                      <strong>{player.name}</strong>
+                      <span>{player.score} очк.</span>
                     </div>
-                  </button>
-                ))}
-                {room.hand.length === 0 ? <p>Карты придут при старте.</p> : null}
-              </div>
-            ) : (
-              <div className="submissions-grid">
-                {room?.submissions.map((submission) => (
-                  <div
-                    key={submission.playerId}
-                    className={`submission-card${submission.isYours ? " submission-card--mine" : ""}`}
-                  >
-                    {submission.card.imageUrl ? (
-                      <Image
-                        src={submission.card.imageUrl}
-                        alt={submission.card.label}
-                        width={320}
-                        height={200}
-                        className="img-fluid"
-                      />
-                    ) : null}
-                    <div className="submission-body">
-                      <div className="row">
-                        <strong>{submission.playerName}</strong>
-                        <span>{submission.votes} голосов</span>
-                      </div>
-                      {room?.status === "voting" && submission.playerId !== socket.id ? (
-                        <button className="btn" onClick={() => voteFor(submission.playerId)}>
-                          Голосовать
-                        </button>
-                      ) : null}
-                    </div>
+                    <small>{player.isHost ? "Хост" : "Игрок"}</small>
                   </div>
                 ))}
-                {room?.submissions.length === 0 ? (
-                  <p>Карт пока нет — ждём игроков.</p>
-                ) : null}
               </div>
-            )}
-          </div>
+              {room?.hostId === socket.id ? (
+                <p className="status-text">Хост может начать новую игру.</p>
+              ) : null}
+            </div>
+          ) : (
+            <>
+              <div>
+                <h2 className="question-box">Вопрос</h2>
+                <p className="question-text">
+                  {room?.currentQuestion || "Ожидаем начала игры"}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="section-title">{isPlaying ? "Ваши карты" : "Карты раунда"}</h3>
+                {isPlaying && room ? (
+                  <div className="cards-grid">
+                    {room.hand.map((card) => (
+                      <button
+                        key={card.id}
+                        onClick={() => playCard(card)}
+                        disabled={Boolean(you?.hasPlayed)}
+                        className="card-button"
+                      >
+                        {card.imageUrl ? (
+                          <Image
+                            src={card.imageUrl}
+                            alt={card.label}
+                            width={320}
+                            height={200}
+                            className="img-fluid"
+                          />
+                        ) : null}
+                        <div className="card-content">
+                          <strong>{card.label}</strong>
+                        </div>
+                      </button>
+                    ))}
+                    {room.hand.length === 0 ? <p>Карты придут при старте.</p> : null}
+                  </div>
+                ) : (
+                  <div className="submissions-grid">
+                    {room?.submissions.map((submission) => (
+                      <div
+                        key={submission.playerId}
+                        className={`submission-card${submission.isYours ? " submission-card--mine" : ""}`}
+                      >
+                        {submission.card.imageUrl ? (
+                          <Image
+                            src={submission.card.imageUrl}
+                            alt={submission.card.label}
+                            width={320}
+                            height={200}
+                            className="img-fluid"
+                          />
+                        ) : null}
+                        <div className="submission-body">
+                          <div className="row">
+                            <strong>{submission.playerName}</strong>
+                            <span>{submission.votes} голосов</span>
+                          </div>
+                          {room?.status === "voting" && submission.playerId !== socket.id ? (
+                            <button className="btn" onClick={() => voteFor(submission.playerId)}>
+                              Голосовать
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+                    ))}
+                    {room?.submissions.length === 0 ? (
+                      <p>Карт пока нет — ждём игроков.</p>
+                    ) : null}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         <div className="stack">
@@ -279,15 +306,6 @@ export default function RoomPage() {
                     value={questionTotal}
                     onChange={(event) => setQuestionTotal(Number(event.target.value))}
                     className="input"
-                  />
-                </label>
-                <label className="field">
-                  Свои вопросы (по одному в строке, пусто — дефолт)
-                  <textarea
-                    value={questionList}
-                    onChange={(event) => setQuestionList(event.target.value)}
-                    rows={6}
-                    className="textarea"
                   />
                 </label>
                 <button className="btn btn-primary" type="submit">

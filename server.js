@@ -126,6 +126,7 @@ function serializeRoomFor(room, playerId) {
     turnEndsAt: room.turnEndsAt,
     voteEndsAt: room.voteEndsAt,
     deckRemaining: room.deck.length,
+    isGame: room.status === "playing" || room.status === "voting",
     players: Array.from(room.players.values()).map((p) => ({
       id: p.id,
       name: p.name,
@@ -156,9 +157,16 @@ function dealCards(room) {
 function startNextQuestion(room) {
   room.currentQuestionIndex += 1;
   if (room.currentQuestionIndex >= room.questions.length) {
+    room.currentQuestionIndex = Math.max(0, room.questions.length - 1);
     room.status = "finished";
     room.turnEndsAt = null;
     room.voteEndsAt = null;
+    room.submissions = [];
+    room.voteRegistry = new Map();
+    room.players.forEach((player) => {
+      player.hand = [];
+      player.playedCardId = null;
+    });
     return;
   }
 
@@ -188,18 +196,20 @@ function finishVoting(room) {
     tally.set(targetId, current + 1);
   });
 
-  let winnerId = null;
-  let topScore = -1;
-  tally.forEach((count, submissionOwnerId) => {
-    if (count > topScore) {
-      winnerId = submissionOwnerId;
-      topScore = count;
-    }
+  // Найти максимум голосов
+  let topScore = 0;
+  tally.forEach((count) => {
+    if (count > topScore) topScore = count;
   });
 
-  if (winnerId && room.players.has(winnerId)) {
-    const winner = room.players.get(winnerId);
-    winner.score += 1;
+  // Начислить очки всем лидерам (включая ничьи)
+  if (topScore > 0) {
+    tally.forEach((count, submissionOwnerId) => {
+      if (count === topScore) {
+        const player = room.players.get(submissionOwnerId);
+        if (player) player.score += 1;
+      }
+    });
   }
 
   startNextQuestion(room);
@@ -266,12 +276,12 @@ app
 
       socket.on(
         "lobby:createRoom",
-        ({ name, password, questionTotal = 5, questions }) => {
+        ({ name, password, questionTotal = 2, questions }) => {
           if (!socket.data.name) return;
           const room = createRoom({
             name,
             password,
-            questionTotal: Number(questionTotal) || 5,
+            questionTotal: Number(questionTotal) || 2,
             questions: normalizeQuestions(questions),
             hostSocket: socket,
           });

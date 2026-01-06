@@ -45,11 +45,12 @@ export type RoomState = {
   hostId: string | null;
   currentQuestionIndex: number;
   questionTotal: number;
-	questions: string[];
+  questions: string[];
   currentQuestion: string | null;
   turnEndsAt: number | null;
   voteEndsAt: number | null;
   deckRemaining: number;
+  isGame: boolean;
   players: RoomPlayer[];
   submissions: Submission[];
   hand: Card[];
