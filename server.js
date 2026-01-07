@@ -17,8 +17,8 @@ const app = next({ dev });
 const handle = app.getRequestHandler();
 
 const HAND_SIZE = 6;
-const TURN_TIME_MS = 5_000;
-const VOTE_TIME_MS = 5_000;
+const TURN_TIME_MS = 60_000;
+const VOTE_TIME_MS = 30_000;
 
 const rooms = new Map();
 
